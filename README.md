@@ -3,6 +3,11 @@
 A digital creature that learns from your interactions using PyTorch.
 Inspired by the Norns from *Creatures* (1996) and the Thronglets from *Black Mirror*.
 
+<p align="center">
+  <img src="./neurumi_screenshot1.jpg" alt="Neurumi screenshot 1" width="700">
+  <img src="./neurumi_screenshot2.jpg" alt="Neurumi screenshot 2" width="700">
+</p>
+
 ## Setup
 
 ```bash
