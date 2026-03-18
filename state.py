@@ -139,11 +139,11 @@ ACTION_EFFECTS = {
 }
 
 EMOTION_META = {
-    "happy":   {"emoji": "✦", "label": "Feliz",     "color": "#5DCAA5"},
-    "calm":    {"emoji": "◉", "label": "Tranquilo", "color": "#378ADD"},
-    "curious": {"emoji": "◈", "label": "Curioso",   "color": "#7F77DD"},
-    "hungry":  {"emoji": "◌", "label": "Hambriento","color": "#D85A30"},
-    "scared":  {"emoji": "◍", "label": "Asustado",  "color": "#BA7517"},
-    "sleepy":  {"emoji": "◎", "label": "Cansado",   "color": "#888780"},
-    "lonely":  {"emoji": "◯", "label": "Solitario", "color": "#D4537E"},
+    "happy":   {"emoji": "✦", "label": "Happy",     "color": "#5DCAA5"},
+    "calm":    {"emoji": "◉", "label": "Relaxed", "color": "#378ADD"},
+    "curious": {"emoji": "◈", "label": "Curious",   "color": "#7F77DD"},
+    "hungry":  {"emoji": "◌", "label": "Hungry","color": "#D85A30"},
+    "scared":  {"emoji": "◍", "label": "Scared",  "color": "#BA7517"},
+    "sleepy":  {"emoji": "◎", "label": "Tired",   "color": "#888780"},
+    "lonely":  {"emoji": "◯", "label": "Lonely", "color": "#D4537E"},
 }
