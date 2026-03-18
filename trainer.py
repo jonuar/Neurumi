@@ -3,19 +3,19 @@ import torch.nn as nn
 import torch.optim as optim
 from typing import Tuple
 
-from brain import AnimaBrain
-from state import AnimaState, ACTION_EFFECTS
+from brain import NeurumiBrain
+from state import NeurumiState, ACTION_EFFECTS
 
 
-class AnimaTrainer:
+class NeurumiTrainer:
     """
     Encapsula la lógica de entrenamiento e inferencia.
 
-    Separar el entrenamiento del modelo (AnimaBrain) y del estado (AnimaState)
+    Separar el entrenamiento del modelo (NeurumiBrain) y del estado (NeurumiState)
     sigue el principio de responsabilidad única — cada clase hace una sola cosa.
     """
 
-    def __init__(self, brain: AnimaBrain, lr: float = 0.001):
+    def __init__(self, brain: NeurumiBrain, lr: float = 0.001):
         self.brain = brain
 
         # MSELoss: mide el error cuadrático medio entre predicción y target
@@ -66,7 +66,7 @@ class AnimaTrainer:
     def train_on_action(
         self,
         action: str,
-        anima: AnimaState,
+        neurumi: NeurumiState,
         steps: int = 8
     ) -> float:
         """
@@ -77,7 +77,7 @@ class AnimaTrainer:
         es pequeño (una sola interacción). En ML se llama "overfitting local"
         pero aquí es intencional — queremos que la red aprenda bien esta acción.
         """
-        state_tensor = anima.to_tensor()
+        state_tensor = neurumi.to_tensor()
         target_tensor = ACTION_EFFECTS[action]
 
         total_loss = 0.0
@@ -94,7 +94,7 @@ class AnimaTrainer:
 
         return avg_loss
 
-    def infer(self, anima: AnimaState) -> torch.Tensor:
+    def infer(self, neurumi: NeurumiState) -> torch.Tensor:
         """
         Inferencia: la red predice los deltas para el estado actual.
         No entrena — solo predice.
@@ -105,7 +105,7 @@ class AnimaTrainer:
         """
         self.brain.eval()  # modo inferencia
         with torch.no_grad():
-            state_tensor = anima.to_tensor()
+            state_tensor = neurumi.to_tensor()
             deltas = self.brain(state_tensor)
         self.brain.train()  # volver a modo entrenamiento
         return deltas

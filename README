@@ -1,4 +1,4 @@
-# ANIMA — Artificial Life with Real ML
+# NEURUMI — Artificial Life with Real ML
 
 A digital creature that learns from your interactions using PyTorch.
 Inspired by the Norns from *Creatures* (1996) and the Thronglets from *Black Mirror*.
@@ -15,27 +15,27 @@ source venv/bin/activate       # Mac/Linux
 pip install -r requirements.txt
 
 # 3. Run
-cd anima
+cd neurumi
 streamlit run app.py
 ```
 
 ## Project structure
 
 ```
-anima/
+neurumi/
 ├── app.py           ← Streamlit UI
-├── brain.py         ← Neural network (AnimaBrain)
-├── state.py         ← Internal state and drives (AnimaState)
+├── brain.py         ← Neural network (NeurumiBrain)
+├── state.py         ← Internal state and drives (NeurumiState)
 ├── trainer.py       ← Training loop and inference
 └── requirements.txt
 ```
 
 ## Generated files
 
-These are created automatically as you interact with ANIMA:
+These are created automatically as you interact with NEURUMI:
 
-- `anima_state.json` — persisted creature state (drives, age, name)
-- `anima_brain.pt`   — trained model weights
+- `neurumi_state.json` — persisted creature state (drives, age, name)
+- `neurumi_brain.pt`   — trained model weights
 
 Use the `↺ Reset` button in the UI to start from scratch.
 
@@ -58,7 +58,7 @@ Input (5 drives) → Linear(5→16) + ReLU → Linear(16→8) + ReLU → Linear(
 
 | Drive | Description |
 |-------|-------------|
-| `hunger` | Increases over time. Feed ANIMA to reduce it. |
+| `hunger` | Increases over time. Feed NEURUMI to reduce it. |
 | `curiosity` | Rises naturally. Playing satisfies it. |
 | `affection` | Decays over time. Petting and playing restore it. |
 | `energy` | Drains slowly. Resting and feeding restore it. |
@@ -66,7 +66,7 @@ Input (5 drives) → Linear(5→16) + ReLU → Linear(16→8) + ReLU → Linear(
 
 ### Emotions
 
-ANIMA's current emotion is derived from the combination of her drives:
+NEURUMI's current emotion is derived from the combination of her drives:
 
 | Emotion | Trigger condition |
 |---------|-------------------|
@@ -81,5 +81,5 @@ ANIMA's current emotion is derived from the combination of her drives:
 ## Roadmap
 
 - **Phase 1** *(current)* — Supervised learning: the network learns the expected effect of each action
-- **Phase 2** — Q-Learning: ANIMA discovers on her own which actions maximize her wellbeing
+- **Phase 2** — Q-Learning: NEURUMI discovers on her own which actions maximize her wellbeing
 - **Phase 3** — Episodic memory: past events are encoded as embeddings and used as context for decisions

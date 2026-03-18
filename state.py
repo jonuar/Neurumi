@@ -11,9 +11,9 @@ DRIVE_KEYS = ["hunger", "curiosity", "affection", "energy", "fear"]
 
 
 @dataclass
-class AnimaState:
+class NeurumiState:
     """
-    El estado interno de ANIMA. Cinco drives entre 0.0 y 1.0.
+    El estado interno de NEURUMI. Cinco drives entre 0.0 y 1.0.
 
     Usamos dataclass para tener __repr__ gratis y facilitar
     la serialización a JSON (para persistir entre sesiones).
@@ -24,7 +24,7 @@ class AnimaState:
     energy:    float = 0.8
     fear:      float = 0.1
     age:       int   = 0    # ticks de vida acumulados
-    name:      str   = "ANIMA-01"
+    name:      str   = "NEURUMI-01"
 
     def to_tensor(self) -> torch.Tensor:
         """
@@ -85,7 +85,7 @@ class AnimaState:
     def get_wellness(self) -> float:
         """
         Score de bienestar entre 0 y 1.
-        Usado para visualizar qué tan bien está ANIMA.
+        Usado para visualizar qué tan bien está NEURUMI.
 
         hunger alta = malo → invertimos con (1 - hunger)
         fear alta = malo → invertimos con (1 - fear)
@@ -101,15 +101,15 @@ class AnimaState:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "AnimaState":
+    def from_dict(cls, data: dict) -> "NeurumiState":
         return cls(**data)
 
-    def save(self, path: str = "anima_state.json"):
+    def save(self, path: str = "neurumi_state.json"):
         with open(path, "w") as f:
             json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
-    def load(cls, path: str = "anima_state.json") -> "AnimaState":
+    def load(cls, path: str = "neurumi_state.json") -> "NeurumiState":
         with open(path) as f:
             data = json.load(f)
         return cls.from_dict(data)

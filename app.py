@@ -1,5 +1,5 @@
 """
-ANIMA — Vida artificial con aprendizaje real.
+NEURUMI — Vida artificial con aprendizaje real.
 
     streamlit run app.py
 """
@@ -9,15 +9,15 @@ import torch
 import time
 from pathlib import Path
 
-from brain import AnimaBrain, save_brain, load_brain
-from state import AnimaState, ACTION_EFFECTS, EMOTION_META
-from trainer import AnimaTrainer
+from brain import NeurumiBrain, save_brain, load_brain
+from state import NeurumiState, ACTION_EFFECTS, EMOTION_META
+from trainer import NeurumiTrainer
 
 
 # ─── Configuración de página ────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="ANIMA",
+    page_title="NEURUMI",
     page_icon="◉",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -237,42 +237,42 @@ hr {
 # entre cada interacción del usuario. Sin esto, todo se reiniciaría
 # con cada click.
 
-if "anima" not in st.session_state:
+if "neurumi" not in st.session_state:
     # Intentar cargar estado guardado
-    if Path("anima_state.json").exists():
-        st.session_state.anima = AnimaState.load("anima_state.json")
+    if Path("neurumi_state.json").exists():
+        st.session_state.neurumi = NeurumiState.load("neurumi_state.json")
     else:
-        st.session_state.anima = AnimaState()
+        st.session_state.neurumi = NeurumiState()
 
 if "brain" not in st.session_state:
-    if Path("anima_brain.pt").exists():
-        st.session_state.brain = load_brain("anima_brain.pt")
+    if Path("neurumi_brain.pt").exists():
+        st.session_state.brain = load_brain("neurumi_brain.pt")
     else:
-        st.session_state.brain = AnimaBrain()
+        st.session_state.brain = NeurumiBrain()
 
 if "trainer" not in st.session_state:
-    st.session_state.trainer = AnimaTrainer(st.session_state.brain)
+    st.session_state.trainer = NeurumiTrainer(st.session_state.brain)
 
 if "memory_log" not in st.session_state:
-    loaded = Path("anima_state.json").exists()
+    loaded = Path("neurumi_state.json").exists()
     st.session_state.memory_log = [
-        f"{'ANIMA recuerda. Época ' + str(st.session_state.anima.age) if loaded else 'ANIMA despierta por primera vez.'}"
+        f"{'NEURUMI recuerda. Época ' + str(st.session_state.neurumi.age) if loaded else 'NEURUMI despierta por primera vez.'}"
     ]
 
 if "tick" not in st.session_state:
-    st.session_state.tick = st.session_state.anima.age
+    st.session_state.tick = st.session_state.neurumi.age
 
 # Shortcuts locales para legibilidad
-anima: AnimaState = st.session_state.anima
-brain: AnimaBrain = st.session_state.brain
-trainer: AnimaTrainer = st.session_state.trainer
+neurumi: NeurumiState = st.session_state.neurumi
+brain: NeurumiBrain = st.session_state.brain
+trainer: NeurumiTrainer = st.session_state.trainer
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 def add_memory(text: str, recent: bool = False):
     """Agrega una entrada al log de memoria con timestamp de edad."""
-    entry = {"text": f"[{anima.age:04d}] {text}", "recent": recent}
+    entry = {"text": f"[{neurumi.age:04d}] {text}", "recent": recent}
     st.session_state.memory_log.insert(0, entry)
     if len(st.session_state.memory_log) > 12:
         st.session_state.memory_log.pop()
@@ -282,19 +282,19 @@ def do_action(action: str):
     """
     Procesa una acción del jugador:
     1. Entrena la red con el efecto esperado de esta acción
-    2. Aplica el efecto real al estado de ANIMA
+    2. Aplica el efecto real al estado de NEURUMI
     3. Hace tick (pasa el tiempo)
     4. Guarda estado y pesos
     """
     # Entrenamiento: la red aprende qué debería pasar con esta acción
-    avg_loss = trainer.train_on_action(action, anima, steps=8)
+    avg_loss = trainer.train_on_action(action, neurumi, steps=8)
 
     # Efecto real sobre los drives
-    anima.apply_action_effect(ACTION_EFFECTS[action])
+    neurumi.apply_action_effect(ACTION_EFFECTS[action])
 
     # Tick del tiempo
-    anima.tick()
-    st.session_state.tick = anima.age
+    neurumi.tick()
+    st.session_state.tick = neurumi.age
 
     # Memoria
     action_labels = {
@@ -306,19 +306,19 @@ def do_action(action: str):
     add_memory(f"{action_labels[action]} loss={avg_loss:.4f}", recent=(action != "ignore"))
 
     # Persistir
-    anima.save("anima_state.json")
-    save_brain(brain, "anima_brain.pt")
+    neurumi.save("neurumi_state.json")
+    save_brain(brain, "neurumi_brain.pt")
 
 
 def do_tick_only():
     """Solo pasa el tiempo, sin acción del jugador."""
-    deltas = trainer.infer(anima)
-    anima.apply_deltas(deltas, scale=0.05)
-    anima.tick()
-    st.session_state.tick = anima.age
+    deltas = trainer.infer(neurumi)
+    neurumi.apply_deltas(deltas, scale=0.05)
+    neurumi.tick()
+    st.session_state.tick = neurumi.age
     add_memory("Tiempo libre. La red predice y ajusta.")
-    anima.save("anima_state.json")
-    save_brain(brain, "anima_brain.pt")
+    neurumi.save("neurumi_state.json")
+    save_brain(brain, "neurumi_brain.pt")
 
 
 def get_orb_style(emotion: str) -> str:
@@ -354,9 +354,9 @@ def drive_bar_html(label: str, value: float, color: str) -> str:
 
 # ─── UI ───────────────────────────────────────────────────────────────────────
 
-emotion = anima.get_emotion()
+emotion = neurumi.get_emotion()
 meta = EMOTION_META[emotion]
-wellness = anima.get_wellness()
+wellness = neurumi.get_wellness()
 
 # Título mínimo
 st.markdown(
@@ -374,12 +374,12 @@ st.markdown(f"""
     <div class="creature-orb" style="{orb_style}">
         <span style="font-size:2.8rem; line-height:1;">{meta['emoji']}</span>
     </div>
-    <p class="creature-name">{anima.name}</p>
+    <p class="creature-name">{neurumi.name}</p>
     <p class="creature-emotion">
         <span class="emotion-badge" style="background:{meta['color']}22; color:{meta['color']};">
             {meta['label']}
         </span>
-        &nbsp;·&nbsp; época {anima.age}
+        &nbsp;·&nbsp; época {neurumi.age}
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -397,7 +397,7 @@ st.markdown(f"""
         <div class="metric-label">Bienestar</div>
     </div>
     <div class="metric-box">
-        <div class="metric-value">{anima.age}</div>
+        <div class="metric-value">{neurumi.age}</div>
         <div class="metric-label">Épocas</div>
     </div>
     <div class="metric-box">
@@ -417,11 +417,11 @@ st.markdown(f"""
 st.markdown('<p class="section-header">Estado interno</p>', unsafe_allow_html=True)
 
 drive_config = [
-    ("Hambre",    anima.hunger,    "#E24B4A"),
-    ("Curiosidad", anima.curiosity, "#7F77DD"),
-    ("Afecto",    anima.affection, "#D4537E"),
-    ("Energía",   anima.energy,    "#1D9E75"),
-    ("Miedo",     anima.fear,      "#BA7517"),
+    ("Hambre",    neurumi.hunger,    "#E24B4A"),
+    ("Curiosidad", neurumi.curiosity, "#7F77DD"),
+    ("Afecto",    neurumi.affection, "#D4537E"),
+    ("Energía",   neurumi.energy,    "#1D9E75"),
+    ("Miedo",     neurumi.fear,      "#BA7517"),
 ]
 
 bars_html = '<div style="background:#FDFCFA; border:1px solid #E8E4DC; border-radius:16px; padding:1.25rem 1.5rem;">'
@@ -468,9 +468,9 @@ with col_tick:
 with col_reset:
     if st.button("↺ Reset", key="btn_reset"):
         # Borra archivos guardados y reinicia
-        Path("anima_state.json").unlink(missing_ok=True)
-        Path("anima_brain.pt").unlink(missing_ok=True)
-        for key in ["anima", "brain", "trainer", "memory_log", "tick"]:
+        Path("neurumi_state.json").unlink(missing_ok=True)
+        Path("neurumi_brain.pt").unlink(missing_ok=True)
+        for key in ["neurumi", "brain", "trainer", "memory_log", "tick"]:
             if key in st.session_state:
                 del st.session_state[key]
         st.rerun()
@@ -516,7 +516,7 @@ st.markdown(log_html, unsafe_allow_html=True)
 st.markdown("<hr>", unsafe_allow_html=True)
 st.markdown(
     '<p style="font-size:0.62rem; color:#D3D1C7; text-align:center; letter-spacing:0.08em;">'
-    'ANIMA · red neuronal feed-forward · pytorch · streamlit'
+    'NEURUMI · red neuronal feed-forward · pytorch · streamlit'
     '</p>',
     unsafe_allow_html=True
 )

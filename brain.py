@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 
 
-class AnimaBrain(nn.Module):
+class NeurumiBrain(nn.Module):
     """
-    La mente de ANIMA. Una red neuronal feed-forward pequeña.
+    La mente de NEURUMI. Una red neuronal feed-forward pequeña.
 
     Recibe 5 drives (estado actual) y produce 5 deltas
     que representan cómo debería cambiar el estado interno.
@@ -38,18 +38,18 @@ class AnimaBrain(nn.Module):
         return x
 
 
-def save_brain(brain: AnimaBrain, path: str = "anima_brain.pt"):
+def save_brain(brain: NeurumiBrain, path: str = "neurumi_brain.pt"):
     """Serializa los pesos del modelo a disco."""
     torch.save(brain.state_dict(), path)
 
 
-def load_brain(path: str = "anima_brain.pt") -> AnimaBrain:
+def load_brain(path: str = "neurumi_brain.pt") -> NeurumiBrain:
     """Carga un modelo previamente guardado."""
-    brain = AnimaBrain()
+    brain = NeurumiBrain()
     brain.load_state_dict(torch.load(path, map_location="cpu"))
     brain.eval()
     return brain
 
 if __name__ == "__main__":
-    brain = AnimaBrain()
+    brain = NeurumiBrain()
     save_brain(brain)

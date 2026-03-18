@@ -1,0 +1,42 @@
+specs.md
+agents.md
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Carpetas comunes de desarrollo
+node_modules/
+dist/
+build/
+coverage/
+
+# Archivos temporales
+*.log
+*.tmp
+*.swp
+
+# Configuración de editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de entorno (si usas alguno)
+.env
+.env.local
+.env.*.local
+
+# Archivos de despliegue
+*.zip
+*.tar.gz
+
+# Otros
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.next
+out
+venv/
+
