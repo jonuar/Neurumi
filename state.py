@@ -18,13 +18,14 @@ class NeurumiState:
     Usamos dataclass para tener __repr__ gratis y facilitar
     la serialización a JSON (para persistir entre sesiones).
     """
-    hunger:    float = 0.3
+
+    hunger: float = 0.3
     curiosity: float = 0.7
     affection: float = 0.5
-    energy:    float = 0.8
-    fear:      float = 0.1
-    age:       int   = 0    # ticks de vida acumulados
-    name:      str   = "NEURUMI-01"
+    energy: float = 0.8
+    fear: float = 0.1
+    age: int = 0  # ticks de vida acumulados
+    name: str = "NEURUMI-01"
 
     def to_tensor(self) -> torch.Tensor:
         """
@@ -65,21 +66,27 @@ class NeurumiState:
         - La energía baja (se cansa)
         """
         self.age += 1
-        self.hunger    = min(1.0, self.hunger + 0.015)
+        self.hunger = min(1.0, self.hunger + 0.015)
         self.curiosity = min(1.0, self.curiosity + 0.008)
         self.affection = max(0.0, self.affection - 0.010)
-        self.energy    = max(0.0, self.energy - 0.005)
+        self.energy = max(0.0, self.energy - 0.005)
         # El miedo decae naturalmente con el tiempo (se calma solo)
-        self.fear      = max(0.0, self.fear - 0.003)
+        self.fear = max(0.0, self.fear - 0.003)
 
     def get_emotion(self) -> str:
         """Traduce el estado interno a una emoción legible."""
-        if self.fear > 0.65:       return "scared"
-        if self.hunger > 0.78:     return "hungry"
-        if self.energy < 0.18:     return "sleepy"
-        if self.affection > 0.78:  return "happy"
-        if self.affection < 0.22:  return "lonely"
-        if self.curiosity > 0.82:  return "curious"
+        if self.fear > 0.65:
+            return "scared"
+        if self.hunger > 0.78:
+            return "hungry"
+        if self.energy < 0.18:
+            return "sleepy"
+        if self.affection > 0.78:
+            return "happy"
+        if self.affection < 0.22:
+            return "lonely"
+        if self.curiosity > 0.82:
+            return "curious"
         return "calm"
 
     def get_wellness(self) -> float:
@@ -90,12 +97,11 @@ class NeurumiState:
         hunger alta = malo → invertimos con (1 - hunger)
         fear alta = malo → invertimos con (1 - fear)
         """
-        return round((
-            (1.0 - self.hunger) +
-            self.affection +
-            self.energy +
-            (1.0 - self.fear)
-        ) / 4.0, 3)
+        return round(
+            ((1.0 - self.hunger) + self.affection + self.energy + (1.0 - self.fear))
+            / 4.0,
+            3,
+        )
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -121,29 +127,33 @@ class NeurumiState:
 
 ACTION_EFFECTS = {
     "feed": torch.tensor(
-        [-0.8,  0.1,  0.2,  0.5, -0.1], dtype=torch.float32
+        [-0.8, 0.1, 0.2, 0.5, -0.1],
+        dtype=torch.float32,
         # hunger baja mucho, energía sube, afecto sube un poco
     ),
     "play": torch.tensor(
-        [-0.1,  0.8,  0.3, -0.4, -0.3], dtype=torch.float32
+        [-0.1, 0.8, 0.3, -0.4, -0.3],
+        dtype=torch.float32,
         # curiosidad sube mucho, afecto sube, energía baja (se cansa)
     ),
     "pet": torch.tensor(
-        [ 0.0,  0.1,  0.9,  0.0, -0.6], dtype=torch.float32
+        [0.0, 0.1, 0.9, 0.0, -0.6],
+        dtype=torch.float32,
         # afecto sube muchísimo, miedo cae mucho
     ),
     "ignore": torch.tensor(
-        [-0.1, -0.2, -0.5,  0.1,  0.3], dtype=torch.float32
+        [-0.1, -0.2, -0.5, 0.1, 0.3],
+        dtype=torch.float32,
         # afecto cae, miedo sube, energía sube un poco (descansa)
     ),
 }
 
 EMOTION_META = {
-    "happy":   {"emoji": "✦", "label": "Happy",     "color": "#5DCAA5"},
-    "calm":    {"emoji": "◉", "label": "Relaxed", "color": "#378ADD"},
-    "curious": {"emoji": "◈", "label": "Curious",   "color": "#7F77DD"},
-    "hungry":  {"emoji": "◌", "label": "Hungry","color": "#D85A30"},
-    "scared":  {"emoji": "◍", "label": "Scared",  "color": "#BA7517"},
-    "sleepy":  {"emoji": "◎", "label": "Tired",   "color": "#888780"},
-    "lonely":  {"emoji": "◯", "label": "Lonely", "color": "#D4537E"},
+    "happy": {"emoji": "(≧◡≦)", "label": "Happy", "color": "#5DCAA5"},
+    "calm": {"emoji": "( ˘ᵕ˘)", "label": "Calm", "color": "#378ADD"},
+    "curious": {"emoji": "(⊙ᗜ⊙)", "label": "Curious", "color": "#7F77DD"},
+    "hungry": {"emoji": "(◑﹏◐)", "label": "Hungry", "color": "#D85A30"},
+    "scared": {"emoji": "(⓪△⓪)", "label": "Scared", "color": "#BA7517"},
+    "sleepy": {"emoji": "(-_-)zzz", "label": "Sleepy", "color": "#888780"},
+    "lonely": {"emoji": "(ಥ﹏ಥ)", "label": "Lonely", "color": "#D4537E"},
 }

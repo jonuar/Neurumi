@@ -332,7 +332,7 @@ orb_style = get_orb_style(emotion)
 st.markdown(f"""
 <div class="creature-card">
     <div class="creature-orb" style="{orb_style}">
-        <span style="font-size:2.8rem;line-height:1;">{meta['emoji']}</span>
+        <span style="color:black;font-size:2rem;line-height:1;">{meta['emoji']}</span>
     </div>
     <p class="creature-name">{neurumi.name}</p>
     <p class="creature-emotion">

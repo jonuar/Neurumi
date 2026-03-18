@@ -39,5 +39,6 @@ pnpm-debug.log*
 .next
 out
 venv/
+.venv/
 pycache/
 
