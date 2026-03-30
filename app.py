@@ -14,6 +14,9 @@ from brain import NeurumiBrain, save_brain, load_brain
 from state import NeurumiState, ACTION_EFFECTS, EMOTION_META
 from trainer import NeurumiTrainer
 
+from q_brain import QBrain, load_q_brain, save_q_brain
+from q_trainer import DQNTrainer
+
 
 # ─── Page config ─────────────────────────────────────────────────────────────
 
@@ -186,7 +189,7 @@ hr {
 """, unsafe_allow_html=True)
 
 
-# ─── Session state ────────────────────────────────────────────────────────────
+# ─── Session state
 # st.session_state persists values across Streamlit reruns (each user interaction
 # triggers a full script rerun). Without this, everything would reset on every click.
 
@@ -214,13 +217,28 @@ if "memory_log" not in st.session_state:
 if "tick" not in st.session_state:
     st.session_state.tick = st.session_state.neurumi.age
 
+from q_brain import QBrain, load_q_brain
+from q_trainer import DQNTrainer
+
+if "q_brain" not in st.session_state:
+    if Path("neurumi_qbrain.pt").exists():
+        st.session_state.q_brain = load_q_brain("neurumi_qbrain.pt")
+    else:
+        st.session_state.q_brain = QBrain()
+
+if "dqn" not in st.session_state:
+    st.session_state.dqn = DQNTrainer(st.session_state.q_brain)
+
+if "rl_mode" not in st.session_state:
+    st.session_state.rl_mode = False
+
 # Local aliases for readability
 neurumi: NeurumiState = st.session_state.neurumi
 brain: NeurumiBrain = st.session_state.brain
 trainer: NeurumiTrainer = st.session_state.trainer
 
 
-# ─── Helpers ──────────────────────────────────────────────────────────────────
+# ─── Helpers
 
 def add_memory(text: str, recent: bool = False):
     """Prepends a timestamped entry to the episodic memory log."""
@@ -312,7 +330,7 @@ def build_drives_html(drives: list) -> str:
     """
 
 
-# ─── UI ───────────────────────────────────────────────────────────────────────
+# ─── UI 
 
 emotion  = neurumi.get_emotion()
 meta     = EMOTION_META[emotion]
@@ -325,7 +343,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── Creature card ─────────────────────────────────────────────────────────────
+# ── Creature card 
 
 orb_style = get_orb_style(emotion)
 
@@ -344,7 +362,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── Quick metrics ─────────────────────────────────────────────────────────────
+# ── Quick metrics 
 
 last_loss    = trainer.get_last_loss()
 interactions = len(trainer.loss_history)
@@ -371,7 +389,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ── Internal state (drives) ───────────────────────────────────────────────────
-# components.v1.html() renders into an iframe — no Markdown parsing, no escaping.
+# components.v1.html() renders into an iframe, no Markdown parsing, no escaping.
 # height is set slightly larger than content to avoid iframe scrollbar.
 
 st.markdown('<p class="section-header">Internal state</p>', unsafe_allow_html=True)
@@ -386,7 +404,7 @@ drive_config = [
 
 components.html(build_drives_html(drive_config), height=210)
 
-# ── Actions ───────────────────────────────────────────────────────────────────
+# ── Actions
 
 st.markdown('<p class="section-header">Interact</p>', unsafe_allow_html=True)
 
@@ -429,7 +447,7 @@ with col_reset:
                 del st.session_state[key]
         st.rerun()
 
-# ── Loss chart ────────────────────────────────────────────────────────────────
+# ── Loss chart 
 
 if len(trainer.loss_history) > 2:
     st.markdown('<p class="section-header">Learning — loss per interaction</p>', unsafe_allow_html=True)
@@ -441,7 +459,7 @@ if len(trainer.loss_history) > 2:
         unsafe_allow_html=True,
     )
 
-# ── Episodic memory log ───────────────────────────────────────────────────────
+# ── Episodic memory log 
 
 st.markdown('<p class="section-header">Episodic memory</p>', unsafe_allow_html=True)
 
@@ -458,7 +476,76 @@ log_html += "</div>"
 
 st.markdown(log_html, unsafe_allow_html=True)
 
-# ── Footer ────────────────────────────────────────────────────────────────────
+
+
+st.markdown('<p class="section-header">Autonomous mode — Q-Learning</p>',
+            unsafe_allow_html=True)
+
+dqn = st.session_state.dqn
+rl_mode = st.session_state.rl_mode
+
+col_rl1, col_rl2 = st.columns([1, 1])
+
+with col_rl1:
+    # One autonomous step, the agent decides the action
+    if st.button("⚡ Agent step", key="btn_rl_step"):
+        result = dqn.step(neurumi)
+        add_memory(
+            f"Agent chose {result['action']} · r={result['reward']:.3f} · "
+            f"ε={result['epsilon']:.2f}",
+            recent=result["reward"] > 0.5
+        )
+        neurumi.save("neurumi_state.json")
+        save_q_brain(st.session_state.q_brain, "neurumi_qbrain.pt")
+        st.rerun()
+
+with col_rl2:
+    # 20 autonomous steps at once, watch the agent learn fast
+    if st.button("⚡×20 Train burst", key="btn_rl_burst"):
+        for _ in range(20):
+            dqn.step(neurumi)
+        add_memory(f"20 autonomous steps. ε={dqn.epsilon:.2f} · "
+                f"buffer={len(dqn.buffer)}")
+        neurumi.save("neurumi_state.json")
+        save_q_brain(st.session_state.q_brain, "neurumi_qbrain.pt")
+        st.rerun()
+
+# Q-values display, shows what the agent thinks about each action
+if len(dqn.buffer) > 0:
+    q_vals = dqn.get_q_values(neurumi)
+    best_action = max(q_vals, key=q_vals.get)
+
+    q_rows = ""
+    for action, val in q_vals.items():
+        bar_pct = min(100, max(0, int((val + 1) * 50)))  # map [-1,1] to [0,100]
+        highlight = "font-weight:600;" if action == best_action else ""
+        q_rows += f"""
+        <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                <span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;
+                            color:#888780;font-family:monospace;{highlight}">{action}</span>
+                <span style="font-size:11px;color:#B4B2A9;font-family:monospace;">{val:.3f}</span>
+            </div>
+            <div style="background:#E8E4DC;border-radius:3px;height:4px;overflow:hidden;">
+                <div style="width:{bar_pct}%;height:100%;background:#7F77DD;border-radius:3px;"></div>
+            </div>
+        </div>
+        """
+
+    components.html(f"""
+    <div style="background:#FDFCFA;border:1px solid #E8E4DC;border-radius:16px;
+                padding:20px 24px;font-family:monospace;">
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
+                    color:#B4B2A9;margin-bottom:14px;">Q-values · best: {best_action}</div>
+        {q_rows}
+        <div style="font-size:10px;color:#D3D1C7;margin-top:10px;">
+            ε={dqn.epsilon:.3f} · steps={dqn.steps} · buffer={len(dqn.buffer)}
+        </div>
+    </div>
+    """, height=230)
+
+
+# ── Footer
 
 st.markdown("<hr>", unsafe_allow_html=True)
 st.markdown(
