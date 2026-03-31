@@ -2,54 +2,38 @@ import torch
 import torch.nn as nn
 
 
-class NeurumiBrain(nn.Module):
+class AnimaBrain(nn.Module):
     """
-    La mente de NEURUMI. Una red neuronal feed-forward pequeña.
+    Phase 1 supervised network.
 
-    Recibe 5 drives (estado actual) y produce 5 deltas
-    que representan cómo debería cambiar el estado interno.
+    Maps 5 drives → 5 deltas representing how the state should change.
+    Trained by imitating ACTION_EFFECTS targets — not by reward.
 
-    Arquitectura: 5 → 16 → 8 → 5
+    Architecture: 5 → 16 → 8 → 5
+    Output activation: Tanh (bounds deltas to [-1, 1])
     """
 
     def __init__(self):
         super().__init__()
-
-        # Capa 1: de 5 drives a 16 "pensamientos" internos
         self.layer1 = nn.Linear(5, 16)
-
-        # Capa 2: refina los 16 valores a 8
         self.layer2 = nn.Linear(16, 8)
-
-        # Capa de salida: produce 5 deltas (uno por drive)
         self.layer3 = nn.Linear(8, 5)
+        self.relu   = nn.ReLU()
+        self.tanh   = nn.Tanh()
 
-        # ReLU para capas ocultas: elimina valores negativos
-        self.relu = nn.ReLU()
-
-        # Tanh para la salida: comprime a [-1, 1]
-        # Los deltas pueden ser positivos (drive sube) o negativos (drive baja)
-        self.tanh = nn.Tanh()
-
-    def forward(self, x):
-        x = self.relu(self.layer1(x))   # [5] → [16]
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.relu(self.layer1(x))   # [5]  → [16]
         x = self.relu(self.layer2(x))   # [16] → [8]
-        x = self.tanh(self.layer3(x))   # [8] → [5]
+        x = self.tanh(self.layer3(x))   # [8]  → [5], bounded to [-1, 1]
         return x
 
 
-def save_brain(brain: NeurumiBrain, path: str = "neurumi_brain.pt"):
-    """Serializa los pesos del modelo a disco."""
+def save_brain(brain: AnimaBrain, path: str = "neurumi_brain.pt"):
     torch.save(brain.state_dict(), path)
 
 
-def load_brain(path: str = "neurumi_brain.pt") -> NeurumiBrain:
-    """Carga un modelo previamente guardado."""
-    brain = NeurumiBrain()
+def load_brain(path: str = "neurumi_brain.pt") -> AnimaBrain:
+    brain = AnimaBrain()
     brain.load_state_dict(torch.load(path, map_location="cpu"))
     brain.eval()
     return brain
-
-if __name__ == "__main__":
-    brain = NeurumiBrain()
-    save_brain(brain)

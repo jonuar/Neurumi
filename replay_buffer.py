@@ -7,14 +7,13 @@ import torch
 @dataclass
 class Experience:
     """
-    A single transition tuple: (state, action, reward, next_state, done).
+    One transition tuple stored in the replay buffer: (s, a, r, s', done).
 
-    This is the standard unit of experience in DQN.
-    - state      : drives tensor before the action [5]
-    - action_idx : integer index of the action taken (0-3)
-    - reward     : scalar reward received after the action
-    - next_state : drives tensor after the action [5]
-    - done       : whether the episode ended (always False here — Neurumi lives on)
+    state      : drive tensor before the action        shape [5]
+    action_idx : integer index of the action taken     0-3
+    reward     : scalar reward received after acting
+    next_state : drive tensor after the action          shape [5]
+    done       : True if the episode ended (always False — Neurumi lives on)
     """
     state:      torch.Tensor
     action_idx: int
@@ -27,12 +26,12 @@ class ReplayBuffer:
     """
     Fixed-size circular buffer that stores past experiences.
 
-    Implemented with collections.deque(maxlen=N) — when full,
-    the oldest experience is automatically discarded. O(1) append.
+    Uses collections.deque(maxlen=N): when full, the oldest experience
+    is automatically dropped. Append is O(1).
 
     Why random sampling matters:
-    Sequential training creates temporal correlations — the network
-    overfits to recent events and catastrophically forgets older ones.
+    Training sequentially creates temporal correlations — the network
+    overfits to recent events and forgets older ones (catastrophic forgetting).
     Random mini-batches break that correlation and stabilize training.
     This is the key insight from DeepMind's DQN paper (2013).
     """
@@ -45,10 +44,7 @@ class ReplayBuffer:
         self.buffer.append(experience)
 
     def sample(self, batch_size: int) -> list[Experience]:
-        """
-        Returns a random mini-batch of experiences.
-        Requires buffer to have at least batch_size entries.
-        """
+        """Returns a random mini-batch. Caller must ensure buffer is ready."""
         return random.sample(self.buffer, batch_size)
 
     def __len__(self) -> int:
@@ -57,8 +53,7 @@ class ReplayBuffer:
     @property
     def is_ready(self) -> bool:
         """
-        Training only starts once the buffer has enough experiences.
-        Training on 1-2 samples produces noisy, unstable gradients.
-        We wait for at least 64 experiences before starting.
+        Training only starts once the buffer holds at least 64 experiences.
+        Fewer samples produce noisy, unstable gradient updates.
         """
         return len(self.buffer) >= 64
